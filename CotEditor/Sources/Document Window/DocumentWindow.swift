@@ -102,7 +102,7 @@ final class DocumentWindow: NSWindow {
     }
     
     
-    @objc func _close(_ sender: Any?) {
+    @objc(_close:) func closeWindow(_ sender: Any?) {
         
         NSApp.terminate(nil)
     }
