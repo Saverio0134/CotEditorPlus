@@ -1,30 +1,56 @@
-# CotEditor
+# CotEditorPlus 🚀
+
+[![Latest Release](https://img.shields.io/github/v/release/Saverio0134/CotEditorPlus?style=flat-square&color=blue)](https://github.com/Saverio0134/CotEditorPlus/releases/latest)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/Saverio0134/CotEditorPlus/sync-upstream.yml?branch=main&style=flat-square&label=Upstream%20Sync)](https://github.com/Saverio0134/CotEditorPlus/actions)
+[![License](https://img.shields.io/badge/License-Apache%202.0-green.svg?style=flat-square)](LICENSE)
+
+> **CotEditorPlus** è una versione migliorata ed ottimizzata del noto editor di testo nativo per macOS [CotEditor](https://coteditor.com), pensata per chi desidera una gestione rapida, fluida e senza interruzioni di documenti e bozze multiple.
+>
+> **CotEditorPlus** is an enhanced fork of the popular native macOS text editor [CotEditor](https://coteditor.com), engineered for a seamless, interruption-free workflow when handling multiple tabs and unsaved drafts.
+
+---
+
+### 💡 Perché CotEditorPlus? / Why CotEditorPlus?
+
+Nel CotEditor originale (e nelle app standard di macOS basate su `NSDocument`), quando hai più fogli o bozze non salvate e clicchi sul **pulsante rosso di chiusura (🔴)**, il programma blocca la chiusura e mostra una finestra di dialogo per ciascun documento aperto chiedendo se salvare, eliminare le modifiche o annullare.
+
+Al contrario, chiudendo l'app da tastiera con **⌘Q**, macOS salva lo stato in background e riapre tutti i fogli intatti al successivo avvio, senza mostrare alcun popup.
+
+**CotEditorPlus unifica questo comportamento:**
+
+| Comportamento | CotEditor Standard | CotEditorPlus ⭐ |
+| :--- | :--- | :--- |
+| **Clic su pulsante rosso (🔴)** | Mostra popup *"Vuoi salvare le modifiche..."* per ogni foglio | **Chiusura istantanea immediata** (comportamento identico a ⌘Q) |
+| **Bozze e fogli non salvati** | Rischio di cancellazione o salvataggio forzato | **Preservati e ripristinati automaticamente** al successivo avvio |
+| **Chiusura singolo file (⌘W)** | Chiude il singolo foglio con conferma standard | Invariata: chiude il singolo foglio |
+| **Aggiornamenti ufficiali** | — | **Sincronizzazione e compilazione 100% automatica** via GitHub Actions |
+
+---
+
+### 📥 Download & Installazione
+
+1. Scarica l'ultima versione compilata da [**Releases**](https://github.com/Saverio0134/CotEditorPlus/releases/latest).
+2. Estrai il file `CotEditor.zip`.
+3. Trascina **CotEditor.app** nella cartella `/Applications` del tuo Mac.
+
+---
+
+### 🔄 Automazione GitHub Actions (Upstream Sync)
+
+CotEditorPlus include un flusso di lavoro GitHub Actions ([`.github/workflows/sync-upstream.yml`](.github/workflows/sync-upstream.yml)) completamente autonomo:
+- Controlla quotidianamente il repository ufficiale [coteditor/CotEditor](https://github.com/coteditor/CotEditor).
+- Effettua automaticamente il merge delle nuove feature e correzioni rilasciate dal team originale senza sovrascrivere le personalizzazioni di CotEditorPlus.
+- Quando esce una nuova versione ufficiale, compila il file `.app` con Xcode e pubblica la nuova release con lo zip pronto da scaricare.
+
+---
+
+## Panoramica del Progetto Originale / Original Project Overview
 
 CotEditor is a lightweight plain text editor designed for macOS. The project aims to provide a general plain text editor for everyone with an intuitive macOS-native user interface.
 
 - __Requirement__: macOS Tahoe 26 or later
 - __Web Site__: <https://coteditor.com>
 - __Mac App Store__: <https://apps.apple.com/app/coteditor/id1024640650>
-- __Languages__: 
-    English,
-    Simplified Chinese,
-    Traditional Chinese,
-    Chinese (Hong Kong),
-    Czech,
-    Dutch,
-    English (UK),
-    French,
-    German,
-    Hindi,
-    Italian,
-    Japanese,
-    Korean,
-    Polish,
-    Portuguese,
-    Russian,
-    Spanish,
-    Ukrainian,
-    and Turkish
 
 ![screenshot](screenshot@2x.png)
 
