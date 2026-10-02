@@ -2,8 +2,8 @@ name: Sync Upstream and Auto-Release
 
 on:
   schedule:
-    - cron: '0 4 * * *' # Ogni giorno alle 04:00 UTC
-  workflow_dispatch: # Avviabile anche manualmente da GitHub con 1 clic
+    - cron: '0 4 * * *'
+  workflow_dispatch:
 
 permissions:
   contents: write
