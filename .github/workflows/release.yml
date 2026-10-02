@@ -3,6 +3,9 @@ name: Release
 on:
   release:
     types: [published]
+  push:
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 permissions:
@@ -45,8 +48,12 @@ jobs:
         path: CotEditor.zip
 
     - name: Upload to Release
-      if: github.event_name == 'release'
+      if: github.event_name == 'release' || startsWith(github.ref, 'refs/tags/v')
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        gh release upload "${{ github.event.release.tag_name }}" CotEditor.zip --clobber
+        tag="${{ github.event.release.tag_name }}"
+        if [ -z "$tag" ]; then
+          tag="${GITHUB_REF#refs/tags/}"
+        fi
+        gh release upload "$tag" CotEditor.zip --clobber

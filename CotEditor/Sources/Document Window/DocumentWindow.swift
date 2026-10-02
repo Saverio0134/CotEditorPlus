@@ -102,19 +102,15 @@ final class DocumentWindow: NSWindow {
     }
     
     
+    @objc func _close(_ sender: Any?) {
+        
+        NSApp.terminate(nil)
+    }
+    
+    
     override func performClose(_ sender: Any?) {
         
-        // Terminate the application when clicking the red close button (x)
-        // to behave like Cmd+Q, keeping unsaved documents on relaunch.
-        if let button = sender as? NSButton,
-           button == self.standardWindowButton(.closeButton)
-            || (self.tabGroup?.windows.contains { $0.standardWindowButton(.closeButton) == button } ?? false)
-        {
-            NSApp.terminate(nil)
-            return
-        }
-        
-        super.performClose(sender)
+        NSApp.terminate(nil)
     }
     
     
