@@ -1,0 +1,52 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  XCODE_VERSION: "27.0"
+
+jobs:
+  build-release:
+    name: Build CotEditor Release
+    runs-on: xcode-27
+
+    steps:
+    - name: Set Xcode version
+      run: echo "DEVELOPER_DIR=/Applications/Xcode_${XCODE_VERSION}.app" >> "$GITHUB_ENV"
+
+    - name: Show environments
+      run: |
+        sw_vers
+        xcodebuild -version
+        swift --version
+
+    - name: Checkout
+      uses: actions/checkout@v7
+
+    - name: Build Application
+      run: |
+        set -euo pipefail
+        rm -rf /tmp/CotEditorInstall
+        xcodebuild install -scheme CotEditor -configuration Release DSTROOT=/tmp/CotEditorInstall CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER= CODE_SIGN_ENTITLEMENTS_SUFFIX=-AdHoc -skipPackagePluginValidation
+        cd /tmp/CotEditorInstall/Applications
+        ditto -c -k --sequesterRsrc --keepParent CotEditor.app CotEditor.zip
+        mv CotEditor.zip "$GITHUB_WORKSPACE/CotEditor.zip"
+
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: CotEditor-macOS
+        path: CotEditor.zip
+
+    - name: Upload to Release
+      if: github.event_name == 'release'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        gh release upload "${{ github.event.release.tag_name }}" CotEditor.zip --clobber
