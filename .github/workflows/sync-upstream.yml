@@ -1,0 +1,104 @@
+name: Sync Upstream and Auto-Release
+
+on:
+  schedule:
+    - cron: '0 4 * * *' # Ogni giorno alle 04:00 UTC
+  workflow_dispatch: # Avviabile anche manualmente da GitHub con 1 clic
+
+permissions:
+  contents: write
+
+env:
+  XCODE_VERSION: "27.0"
+
+jobs:
+  sync-and-release:
+    name: Sync Upstream & Auto-Release
+    runs-on: xcode-27
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v7
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Configure Git
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+
+    - name: Fetch Upstream
+      run: |
+        git remote add upstream https://github.com/coteditor/CotEditor.git || true
+        git fetch upstream --tags
+
+    - name: Check for New Commits in Upstream
+      id: check_upstream
+      run: |
+        new_commits=$(git log HEAD..upstream/main --oneline)
+        if [ -n "$new_commits" ]; then
+          echo "Upstream has new commits!"
+          echo "has_updates=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "No new commits from upstream."
+          echo "has_updates=false" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Merge Upstream Changes
+      if: steps.check_upstream.outputs.has_updates == 'true'
+      run: |
+        git merge upstream/main -m "Merge upstream changes from coteditor/CotEditor"
+        git push origin main
+
+    - name: Detect Latest Official Release
+      id: check_release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        latest_upstream_tag=$(gh api repos/coteditor/CotEditor/releases/latest --jq .tag_name 2>/dev/null || echo "")
+        echo "Latest upstream release tag: $latest_upstream_tag"
+        if [ -z "$latest_upstream_tag" ]; then
+          echo "should_release=false" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+
+        new_tag="v${latest_upstream_tag#v}-plus"
+        echo "Candidate tag: $new_tag"
+
+        if gh release view "$new_tag" >/dev/null 2>&1; then
+          echo "Release $new_tag already exists."
+          echo "should_release=false" >> "$GITHUB_OUTPUT"
+        else
+          echo "New upstream release detected: $new_tag!"
+          echo "should_release=true" >> "$GITHUB_OUTPUT"
+          echo "new_tag=$new_tag" >> "$GITHUB_OUTPUT"
+          echo "upstream_version=$latest_upstream_tag" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Set Xcode version
+      if: steps.check_release.outputs.should_release == 'true'
+      run: echo "DEVELOPER_DIR=/Applications/Xcode_${XCODE_VERSION}.app" >> "$GITHUB_ENV"
+
+    - name: Build Application
+      if: steps.check_release.outputs.should_release == 'true'
+      run: |
+        set -euo pipefail
+        rm -rf /tmp/CotEditorInstall
+        xcodebuild install -scheme CotEditor -configuration Release DSTROOT=/tmp/CotEditorInstall CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER= CODE_SIGN_ENTITLEMENTS_SUFFIX=-AdHoc -skipPackagePluginValidation
+        cd /tmp/CotEditorInstall/Applications
+        ditto -c -k --sequesterRsrc --keepParent CotEditor.app CotEditor.zip
+        mv CotEditor.zip "$GITHUB_WORKSPACE/CotEditor.zip"
+
+    - name: Create GitHub Release
+      if: steps.check_release.outputs.should_release == 'true'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        tag="${{ steps.check_release.outputs.new_tag }}"
+        upstream_ver="${{ steps.check_release.outputs.upstream_version }}"
+        gh release create "$tag" CotEditor.zip \
+          --title "CotEditorPlus $tag" \
+          --notes "### Aggiornamento automatico da CotEditor $upstream_ver
+- Sincronizzato con l'ultima versione ufficiale di CotEditor ($upstream_ver).
+- Include la funzionalità CotEditorPlus: chiusura immediata completa sul pulsante rosso (x) senza popup di salvataggio (come ⌘Q)."
