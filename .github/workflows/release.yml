@@ -56,4 +56,8 @@ jobs:
         if [ -z "$tag" ]; then
           tag="${GITHUB_REF#refs/tags/}"
         fi
-        gh release upload "$tag" CotEditor.zip --clobber
+        if ! gh release view "$tag" >/dev/null 2>&1; then
+          gh release create "$tag" CotEditor.zip --title "CotEditorPlus $tag" --generate-notes
+        else
+          gh release upload "$tag" CotEditor.zip --clobber
+        fi
