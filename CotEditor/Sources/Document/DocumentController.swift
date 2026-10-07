@@ -367,21 +367,17 @@ protocol AdditionalDocumentPreparing: NSDocument {
     
     // MARK: Action Messages
     
-    /// Opens a new document as a new window.
+    /// Opens a new document as a tab in the window.
     @IBAction func newDocumentAsWindow(_ sender: Any?) {
         
-        DocumentWindow.tabbingPreference = .manual
         self.newDocument(sender)
-        DocumentWindow.tabbingPreference = nil
     }
     
     
     /// Opens a new document as a tab in the existing frontmost window.
     @IBAction func newDocumentAsTab(_ sender: Any?) {
         
-        DocumentWindow.tabbingPreference = .always
         self.newDocument(sender)
-        DocumentWindow.tabbingPreference = nil
     }
     
     

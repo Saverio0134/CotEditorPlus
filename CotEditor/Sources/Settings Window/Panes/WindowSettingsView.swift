@@ -71,20 +71,13 @@ struct WindowSettingsView: View {
                     .accessibilityLabeledPair(role: .label, id: "windowTabbing", in: self.accessibility)
                 
                 Picker(selection: $windowTabbing) {
-                    Text(
-                        AttributedString(localized: "Respect System Setting", table: "WindowSettings", comment: "verb; menu item") +
-                        AttributedString(" (\(String(localized: NSWindow.userTabbingPreference.label)))",
-                                         attributes: .init().foregroundColor(.secondary))
-                    ).tag(-1)
-                    
-                    Divider()
-                    
-                    ForEach([NSWindow.UserTabbingPreference.manual, .inFullScreen, .always], id: \.self) {
+                    ForEach([NSWindow.UserTabbingPreference.always], id: \.self) {
                         Text($0.label).tag($0.rawValue)
                     }
                 } label: {
                     EmptyView()
                 }
+                .disabled(true)
                 .accessibilityLabeledPair(role: .content, id: "windowTabbing", in: self.accessibility)
             }
             

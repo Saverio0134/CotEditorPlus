@@ -107,6 +107,9 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate {
         
         if self.isDirectoryDocument {
             window.tabbingMode = .disallowed
+        } else {
+            window.tabbingMode = .preferred
+            window.tabbingIdentifier = "CotEditorDocumentWindow"
         }
         
         // set window size
@@ -130,8 +133,7 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate {
         self.updateDocument(document)
         
         window.delegate = self
-        window.standardWindowButton(.closeButton)?.target = NSApp
-        window.standardWindowButton(.closeButton)?.action = #selector(NSApplication.terminate(_:))
+        (window as? DocumentWindow)?.setupCloseButton()
         
         // setup toolbar
         let toolbar = NSToolbar(identifier: self.isDirectoryDocument ? .directoryDocument : .document)
@@ -207,8 +209,7 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate {
         
         super.setDocumentEdited(self.isWhitePaper ? false : dirtyFlag)
         
-        self.window?.standardWindowButton(.closeButton)?.target = NSApp
-        self.window?.standardWindowButton(.closeButton)?.action = #selector(NSApplication.terminate(_:))
+        (self.window as? DocumentWindow)?.setupCloseButton()
     }
     
     
@@ -236,12 +237,6 @@ final class DocumentWindowController: NSWindowController, NSWindowDelegate {
     
     
     // MARK: Window Delegate
-    
-    func windowShouldClose(_ sender: NSWindow) -> Bool {
-        
-        NSApp.terminate(nil)
-        return false
-    }
     
     func windowWillUseStandardFrame(_ window: NSWindow, defaultFrame newFrame: NSRect) -> NSRect {
         

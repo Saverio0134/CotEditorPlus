@@ -102,15 +102,38 @@ final class DocumentWindow: NSWindow {
     }
     
     
-    @objc(_close:) func closeWindow(_ sender: Any?) {
+    override func becomeKey() {
         
-        NSApp.terminate(nil)
+        super.becomeKey()
+        
+        self.setupCloseButton()
+    }
+    
+    
+    override func makeKeyAndOrderFront(_ sender: Any?) {
+        
+        self.attachToExistingWindowIfPossible()
+        super.makeKeyAndOrderFront(sender)
+    }
+    
+    
+    override func orderFront(_ sender: Any?) {
+        
+        self.attachToExistingWindowIfPossible()
+        super.orderFront(sender)
     }
     
     
     override func performClose(_ sender: Any?) {
         
-        NSApp.terminate(nil)
+        // Terminate the application when clicking the window's red close button (🔴)
+        // to behave like Cmd+Q, preserving unsaved documents without per-document save sheets.
+        if let button = sender as? NSButton, button == self.standardWindowButton(.closeButton) {
+            NSApp.terminate(nil)
+            return
+        }
+        
+        super.performClose(sender)
     }
     
     
@@ -121,6 +144,9 @@ final class DocumentWindow: NSWindow {
         switch item.action {
             case #selector(toggleKeepOnTop):
                 (item as? any StatableItem)?.state = self.isFloating ? .on : .off
+                
+            case #selector(NSWindow.moveTabToNewWindow):
+                return false
                 
             default:
                 break
@@ -134,6 +160,36 @@ final class DocumentWindow: NSWindow {
     @IBAction func toggleKeepOnTop(_ sender: Any?) {
         
         self.isFloating.toggle()
+    }
+    
+    
+    /// Disallow moving tabs to separate windows (single-window application only).
+    @IBAction override func moveTabToNewWindow(_ sender: Any?) {
+        
+        // No-op
+    }
+    
+    
+    // MARK: Internal Methods
+    
+    /// Sets up the window's standard close button to terminate the application.
+    func setupCloseButton() {
+        
+        self.standardWindowButton(.closeButton)?.target = NSApp
+        self.standardWindowButton(.closeButton)?.action = #selector(NSApplication.terminate(_:))
+    }
+    
+    
+    /// Attaches the window to the existing tab group so that only a single window exists.
+    func attachToExistingWindowIfPossible() {
+        
+        guard self.tabbingMode != .disallowed else { return }
+        
+        if let existingWindow = NSApp.windows.compactMap({ $0 as? DocumentWindow }).first(where: { $0 != self && $0.isVisible && $0.tabbingMode != .disallowed }) {
+            if self.tabGroup == nil || self.tabGroup !== existingWindow.tabGroup {
+                existingWindow.addTabbedWindow(self, ordered: .above)
+            }
+        }
     }
     
     
@@ -160,15 +216,7 @@ extension DocumentWindow {
     
     override class var userTabbingPreference: NSWindow.UserTabbingPreference {
         
-        if let tabbingPreference = self.tabbingPreference {
-            return tabbingPreference
-        }
-        
-        if let tabbingPreference = NSWindow.UserTabbingPreference(rawValue: UserDefaults.standard[.windowTabbing]), tabbingPreference.rawValue >= 0 {  // -1 obeys system setting
-            return tabbingPreference
-        }
-        
-        return super.userTabbingPreference
+        .always
     }
     
     
